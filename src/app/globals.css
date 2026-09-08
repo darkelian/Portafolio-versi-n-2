@@ -1,6 +1,30 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Equivalente a `darkMode: "class"` de Tailwind 3: las variantes dark:* se
+   activan por la clase `dark` en <html>, que pone el script anti-parpadeo. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: var(--font-inter), "Inter", sans-serif;
+
+  /* Paleta Noche */
+  --color-night-bg: #0f1423;
+  --color-night-surface: #1a2138;
+  --color-night-surface-hover: #232d48;
+  --color-night-text: #f3f4f6;
+  --color-night-muted: #9ca3af;
+  --color-night-accent: #6366f1;
+  --color-night-accent-hover: #4f46e5;
+
+  /* Paleta Día */
+  --color-day-bg: #fce7d2;
+  --color-day-surface: #fdf1e5;
+  --color-day-surface-hover: #fce7d2;
+  --color-day-text: #592d1f;
+  --color-day-muted: #734327;
+  --color-day-accent: #c25a24;
+  --color-day-accent-hover: #a1491c;
+}
 
 html {
   scroll-behavior: smooth;
@@ -16,7 +40,7 @@ body {
 }
 
 .glass-card:hover {
-  @apply -translate-y-0.5 bg-white/70 dark:bg-night-surfaceHover/80;
+  @apply -translate-y-0.5 bg-white/70 dark:bg-night-surface-hover/80;
 }
 
 .badge {
@@ -24,7 +48,7 @@ body {
 }
 
 .btn-primary {
-  @apply bg-day-accent hover:bg-day-accentHover dark:bg-night-accent dark:hover:bg-night-accentHover text-white transition-colors;
+  @apply bg-day-accent hover:bg-day-accent-hover dark:bg-night-accent dark:hover:bg-night-accent-hover text-white transition-colors;
 }
 
 .btn-secondary {

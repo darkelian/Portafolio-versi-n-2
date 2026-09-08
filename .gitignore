@@ -1,4 +1,4 @@
-# dependencies
+# dependencias
 /node_modules
 /.pnp
 .pnp.js
@@ -9,26 +9,50 @@
 # next.js
 /.next/
 /out/
-
-# production
 /build
+/.next-profiles/
+/.next-docs/
 
-# misc
-.DS_Store
-*.pem
+# cachés de build y lint
+.turbo/
+.eslintcache
+*.tsbuildinfo
 
-# debug
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
+# typescript — lo regenera next dev/build
+next-env.d.ts
 
-# local env files
-.env*.local
+# variables de entorno (nunca subir secretos)
 .env
+.env.*
+!.env.example
 
 # vercel
 .vercel
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
+# herramientas locales de indexado y memoria de agentes
+/.codegraph/
+engram.duckdb
+
+# Claude Code y servidores MCP: configuración personal, no se comparte.
+.claude/
+.mcp.json
+
+# editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# sistema operativo
+.DS_Store
+Thumbs.db
+
+# logs y depuración
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# certificados
+*.pem

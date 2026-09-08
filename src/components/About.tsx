@@ -5,7 +5,7 @@ export function About() {
       className="py-20 border-t border-day-muted/20 dark:border-white/10"
     >
       <div className="flex flex-col md:flex-row gap-12 items-center">
-        <div className="flex-shrink-0 w-36 h-36 rounded-full flex items-center justify-center text-4xl font-extrabold border-2 border-day-accent dark:border-night-accent bg-day-surface dark:bg-night-surface text-day-accent dark:text-night-accent">
+        <div className="shrink-0 w-36 h-36 rounded-full flex items-center justify-center text-4xl font-extrabold border-2 border-day-accent dark:border-night-accent bg-day-surface dark:bg-night-surface text-day-accent dark:text-night-accent">
           BP
         </div>
         <div>

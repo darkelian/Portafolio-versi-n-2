@@ -31,7 +31,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning data-scroll-behavior="smooth">
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
       </head>
