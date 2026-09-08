@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  transition: background-color 0.6s ease, color 0.6s ease;
+  -webkit-font-smoothing: antialiased;
+}
+
+.glass-card {
+  @apply bg-white/50 dark:bg-night-surface/60 border border-white/40 dark:border-white/5 rounded-2xl transition-all duration-300;
+}
+
+.glass-card:hover {
+  @apply -translate-y-0.5 bg-white/70 dark:bg-night-surfaceHover/80;
+}
+
+.badge {
+  @apply inline-flex items-center px-4 py-1.5 rounded-full text-xs font-semibold tracking-wide uppercase border;
+}
+
+.btn-primary {
+  @apply bg-day-accent hover:bg-day-accentHover dark:bg-night-accent dark:hover:bg-night-accentHover text-white transition-colors;
+}
+
+.btn-secondary {
+  @apply bg-transparent border border-day-text/60 text-day-text hover:bg-day-text/5 dark:border-white/20 dark:text-white dark:hover:bg-white/5 transition-colors;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  width: 52px;
+  height: 28px;
+  border-radius: 999px;
+  position: relative;
+  cursor: pointer;
+  padding: 3px;
+  transition: background-color 0.3s;
+}
+
+.toggle-knob {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estrellas del fondo nocturno */
+.stars {
+  background-image:
+    radial-gradient(white, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
+    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
+  background-size: 80px 80px, 150px 150px;
+  background-position: 0 0, 40px 60px;
+  opacity: 0.5;
+}
