@@ -243,33 +243,34 @@ body {
   box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.6);
 }
 
-/* Las animaciones sólo corren en modo noche: en modo día este bloque sigue en
+/* Las animaciones sólo corren en modo noche, y durante el amanecer y el
+   atardecer, mientras la capa todavía se ve: en modo día este bloque sigue en
    el DOM (a opacidad 0) y estaría gastando ciclos para nada. */
-:where(.dark) .sky-rotor {
+:where(.dark, [data-sky-transition]) .sky-rotor {
   animation: sky-rotate 300s linear infinite;
 }
 
-:where(.dark) .star-layer--far {
+:where(.dark, [data-sky-transition]) .star-layer--far {
   animation: star-breathe 14s ease-in-out infinite;
 }
 
-:where(.dark) .star-layer--mid {
+:where(.dark, [data-sky-transition]) .star-layer--mid {
   animation: star-breathe 9s ease-in-out -3s infinite;
 }
 
-:where(.dark) .star-layer--near {
+:where(.dark, [data-sky-transition]) .star-layer--near {
   animation: star-breathe 11s ease-in-out -6s infinite;
 }
 
-:where(.dark) .tux-line {
+:where(.dark, [data-sky-transition]) .tux-line {
   animation: tux-trace 25s ease-in-out var(--tux-delay, 0s) infinite;
 }
 
-:where(.dark) .tux-stars {
+:where(.dark, [data-sky-transition]) .tux-stars {
   animation: tux-glow 25s ease-in-out var(--tux-delay, 0s) infinite;
 }
 
-:where(.dark) .shooting-star {
+:where(.dark, [data-sky-transition]) .shooting-star {
   animation: shooting-star var(--meteor-duration, 15s) ease-out var(--meteor-delay, 0s) infinite;
 }
 
@@ -475,6 +476,15 @@ body {
   transform-origin: center;
 }
 
+/* ---------------------------------------------------------------------------
+   Horizonte (común a los dos cielos)
+   --------------------------------------------------------------------------- */
+
+.landscape {
+  position: absolute;
+  inset: 0;
+}
+
 /* Más anchas que la pantalla y desbordando por abajo, para que el parallax
    nunca deje ver sus bordes. */
 .dune {
@@ -485,48 +495,79 @@ body {
   height: auto;
 }
 
-/* Como en la noche, las animaciones del día sólo corren en su modo. */
-:root:not(.dark) .sun-rays {
+/* Las dunas no se funden al cambiar de tema: pasan de arena a silueta, que es
+   lo que ocurre de verdad cuando cae la noche sobre un paisaje. */
+.dune path {
+  transition: fill 0.7s ease;
+}
+
+.dune--far path {
+  fill: #e8a77c;
+}
+
+.dune--mid path {
+  fill: #d4855a;
+}
+
+.dune--near path {
+  fill: #bf6d43;
+}
+
+:where(.dark) .dune--far path {
+  fill: #2c3355;
+}
+
+:where(.dark) .dune--mid path {
+  fill: #1d2340;
+}
+
+:where(.dark) .dune--near path {
+  fill: #12172b;
+}
+
+/* Como en la noche, las animaciones del día sólo corren en su modo y durante
+   las transiciones, para que el sol no se congele mientras se pone. */
+:root:is(:not(.dark), [data-sky-transition]) .sun-rays {
   animation: sky-rotate 120s linear infinite;
 }
 
-:root:not(.dark) .sun-halo {
+:root:is(:not(.dark), [data-sky-transition]) .sun-halo {
   animation: sun-pulse 8s ease-out infinite;
 }
 
-:root:not(.dark) .sun-halo + .sun-halo {
+:root:is(:not(.dark), [data-sky-transition]) .sun-halo + .sun-halo {
   animation-delay: -4s;
 }
 
-:root:not(.dark) .cloud {
+:root:is(:not(.dark), [data-sky-transition]) .cloud {
   animation: cloud-drift var(--cloud-duration, 120s) linear var(--cloud-delay, 0s) infinite;
 }
 
-:root:not(.dark) .bird-flock {
+:root:is(:not(.dark), [data-sky-transition]) .bird-flock {
   animation: bird-flight var(--flight-duration, 30s) linear var(--flight-delay, 0s) infinite;
 }
 
-:root:not(.dark) .bird-wing--left {
+:root:is(:not(.dark), [data-sky-transition]) .bird-wing--left {
   animation: wing-left 0.6s ease-in-out var(--flap-delay, 0s) infinite;
 }
 
-:root:not(.dark) .bird-wing--right {
+:root:is(:not(.dark), [data-sky-transition]) .bird-wing--right {
   animation: wing-right 0.6s ease-in-out var(--flap-delay, 0s) infinite;
 }
 
-:root:not(.dark) .paper-kite {
+:root:is(:not(.dark), [data-sky-transition]) .paper-kite {
   animation: kite-bob 5s ease-in-out infinite;
 }
 
-:root:not(.dark) .kite-body {
+:root:is(:not(.dark), [data-sky-transition]) .kite-body {
   animation: kite-sway 7s ease-in-out infinite;
 }
 
-:root:not(.dark) .kite-tail {
+:root:is(:not(.dark), [data-sky-transition]) .kite-tail {
   animation: kite-tail 2.4s ease-in-out infinite;
 }
 
-:root:not(.dark) .kite-bow {
+:root:is(:not(.dark), [data-sky-transition]) .kite-bow {
   animation: kite-bow 1.2s ease-in-out var(--bow-delay, 0s) infinite;
 }
 
@@ -630,6 +671,277 @@ body {
   }
   50% {
     transform: rotate(18deg);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Amanecer y atardecer
+   --------------------------------------------------------------------------- */
+
+/* Al cambiar de tema, ThemeProvider marca <html> con
+   data-sky-transition="sunset" | "sunrise" durante --sky-transition (el mismo
+   valor que SKY_TRANSITION_MS en ThemeProvider.tsx). Mientras dura, las capas
+   dejan su fundido rápido de 700 ms y siguen una coreografía: el sol se pone
+   tras las dunas o sale de ellas, el cielo pasa por los tonos del crepúsculo y
+   la noche aparece o se retira. Sin esa marca (carga inicial, o quien pide
+   menos movimiento) el cambio sigue siendo el fundido directo de siempre. */
+:root {
+  --sky-transition: 4s;
+}
+
+.sky-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+}
+
+/* El color de fondo del cielo cambia a lo largo de toda la transición. */
+[data-sky-transition] .sky {
+  transition-duration: var(--sky-transition);
+}
+
+/* Las capas que se funden se promueven a su propia capa de composición: el
+   fundido es entonces trabajo de la GPU y no repinta el contenido. */
+[data-sky-transition] .day-sky,
+[data-sky-transition] .night-sky,
+[data-sky-transition] .sky-glow {
+  will-change: opacity;
+}
+
+/* El contenido (textos, tarjetas, botones) cambiaría de color de golpe al
+   pulsar, cuando el cielo todavía es del tema anterior. Durante la transición
+   se le da a todo un cambio de color lento que arranca hacia la mitad, que es
+   cuando el cielo está en su punto más oscuro. Se excluye el interruptor, cuyo
+   movimiento debe seguir respondiendo al instante. */
+[data-sky-transition] *:not(.toggle-switch):not(.toggle-knob) {
+  transition-property: color, background-color, border-color, fill, stroke;
+  transition-duration: calc(var(--sky-transition) * 0.45);
+  transition-delay: calc(var(--sky-transition) * 0.3);
+  transition-timing-function: ease-in-out;
+}
+
+[data-sky-transition="sunset"] .sky-glow {
+  background: linear-gradient(
+    to top,
+    rgba(255, 140, 80, 0.95),
+    rgba(236, 104, 120, 0.85) 30%,
+    rgba(118, 78, 158, 0.75) 65%,
+    rgba(36, 38, 84, 0.6)
+  );
+  animation: sky-glow var(--sky-transition) ease-in-out;
+}
+
+[data-sky-transition="sunrise"] .sky-glow {
+  background: linear-gradient(
+    to top,
+    rgba(255, 196, 140, 0.95),
+    rgba(248, 150, 168, 0.85) 35%,
+    rgba(150, 128, 200, 0.7) 70%,
+    rgba(58, 60, 120, 0.5)
+  );
+  animation: sky-glow var(--sky-transition) ease-in-out;
+}
+
+/* Atardecer: el sol se enrojece y baja tras las dunas mientras el paisaje se
+   oscurece; después la noche aparece y la luna sube. */
+[data-sky-transition="sunset"] .sun {
+  animation: sun-set var(--sky-transition) forwards;
+}
+
+[data-sky-transition="sunset"] .sun-disc {
+  animation: sun-warm var(--sky-transition) ease-in forwards;
+}
+
+/* La cometa se recoge con el sol y se pierde tras las dunas: es un objeto de
+   día, y bajarla resulta más natural que apagarla donde está. Lleva :root
+   delante para empatar en especificidad con la regla del balanceo
+   (kite-bob) y, al ir más abajo en el archivo, ganarle el turno. */
+:root[data-sky-transition="sunset"] .paper-kite {
+  animation: kite-descend var(--sky-transition) forwards;
+}
+
+[data-sky-transition="sunset"] .day-sky {
+  animation: day-to-dusk var(--sky-transition) ease-in-out forwards;
+}
+
+[data-sky-transition="sunset"] .night-sky {
+  animation: night-in var(--sky-transition) ease-in-out forwards;
+}
+
+[data-sky-transition="sunset"] .moon {
+  animation: moon-rise var(--sky-transition) ease-out forwards;
+}
+
+/* Amanecer: la noche se retira con la luna, y el sol sale de detrás de las
+   dunas, rojizo al principio, mientras el paisaje recupera la luz. */
+[data-sky-transition="sunrise"] .night-sky {
+  animation: night-out var(--sky-transition) ease-in-out forwards;
+}
+
+[data-sky-transition="sunrise"] .moon {
+  animation: moon-set var(--sky-transition) ease-in forwards;
+}
+
+[data-sky-transition="sunrise"] .day-sky {
+  animation: dusk-to-day var(--sky-transition) ease-in-out forwards;
+}
+
+[data-sky-transition="sunrise"] .sun {
+  animation: sun-rise var(--sky-transition) forwards;
+}
+
+[data-sky-transition="sunrise"] .sun-disc {
+  animation: sun-warm var(--sky-transition) ease-out reverse forwards;
+}
+
+/* La cometa vuelve a remontar desde detrás de las dunas con la luz. */
+:root[data-sky-transition="sunrise"] .paper-kite {
+  animation: kite-ascend var(--sky-transition) forwards;
+}
+
+@keyframes sky-glow {
+  0% {
+    opacity: 0;
+  }
+  25%,
+  60% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+/* 95vh basta para que el sol quede tras las dunas en cualquier proporción de
+   pantalla, incluidas las verticales, donde las dunas son más bajas. */
+@keyframes sun-set {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: ease-in;
+  }
+  65%,
+  100% {
+    transform: translateY(95vh);
+  }
+}
+
+@keyframes sun-rise {
+  0%,
+  25% {
+    transform: translateY(95vh);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+@keyframes sun-warm {
+  0% {
+    background-color: #fff3e0;
+  }
+  50% {
+    background-color: #ffc48a;
+  }
+  100% {
+    background-color: #ff8a55;
+  }
+}
+
+/* La cometa acaba de bajar justo cuando la capa de día termina de irse (85 %),
+   y al subir arranca en cuanto esa capa empieza a aparecer. */
+@keyframes kite-descend {
+  0% {
+    transform: translateY(0);
+    animation-timing-function: ease-in;
+  }
+  85%,
+  100% {
+    transform: translateY(80vh);
+  }
+}
+
+@keyframes kite-ascend {
+  0%,
+  15% {
+    transform: translateY(80vh);
+    animation-timing-function: ease-out;
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+/* Los fundidos de las dos capas se solapan de sobra: en ningún momento del
+   camino el cielo se queda sin uno de los dos, que es lo que antes provocaba
+   un instante vacío. Sólo se anima la opacidad, nunca un filtro, para que el
+   trabajo se quede en el compositor. */
+@keyframes day-to-dusk {
+  0%,
+  30% {
+    opacity: 1;
+  }
+  85%,
+  100% {
+    opacity: 0;
+  }
+}
+
+@keyframes dusk-to-day {
+  0%,
+  20% {
+    opacity: 0;
+  }
+  70%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes night-in {
+  0%,
+  25% {
+    opacity: 0;
+  }
+  75%,
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes night-out {
+  0%,
+  10% {
+    opacity: 1;
+  }
+  55%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* La luna usa la propiedad `translate` porque su `transform` ya la inclina. */
+@keyframes moon-rise {
+  0%,
+  40% {
+    translate: 0 60px;
+    opacity: 0;
+  }
+  100% {
+    translate: 0 0;
+    opacity: 1;
+  }
+}
+
+@keyframes moon-set {
+  0% {
+    translate: 0 0;
+    opacity: 1;
+  }
+  45%,
+  100% {
+    translate: 0 60px;
+    opacity: 0;
   }
 }
 

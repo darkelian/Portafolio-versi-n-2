@@ -40,11 +40,34 @@ function getServerSnapshot(): Theme {
   return "dark";
 }
 
+// Duración del amanecer y el atardecer. Debe coincidir con --sky-transition en
+// globals.css, que es donde vive la coreografía.
+const SKY_TRANSITION_MS = 4000;
+let skyTransitionTimer: ReturnType<typeof setTimeout> | undefined;
+
+// Marca <html> con la dirección del cambio para que el cielo haga su
+// transición, y retira la marca al terminar: sólo existe mientras dura, así que
+// la carga inicial nunca dispara un amanecer. Quien pide menos movimiento
+// conserva el fundido directo.
+function playSkyTransition(next: Theme) {
+  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+  const root = document.documentElement;
+  root.dataset.skyTransition = next === "dark" ? "sunset" : "sunrise";
+  clearTimeout(skyTransitionTimer);
+  // Un pequeño margen, porque las animaciones arrancan en el siguiente cálculo
+  // de estilos y no deben perder su último fotograma.
+  skyTransitionTimer = setTimeout(() => {
+    delete root.dataset.skyTransition;
+  }, SKY_TRANSITION_MS + 100);
+}
+
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const theme = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
 
   const toggleTheme = useCallback(() => {
     const next: Theme = getSnapshot() === "dark" ? "light" : "dark";
+    playSkyTransition(next);
     document.documentElement.classList.toggle("dark", next === "dark");
     window.localStorage.setItem("color-theme", next);
     listeners.forEach((listener) => listener());
