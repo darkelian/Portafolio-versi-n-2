@@ -81,11 +81,21 @@ body {
    Cielo nocturno animado
    --------------------------------------------------------------------------- */
 
-/* El parallax del ratón (SkyParallax) sólo escribe estas dos variables; la
-   rotación vive en el hijo .sky-rotor para que ambos transforms no se pisen. */
-.sky-parallax {
+/* SkyParallax sólo publica --parallax-x/y; cada capa decide cuánto se mueve.
+   El cielo nocturno se desplaza en bloque, y su rotación vive en el hijo
+   .sky-rotor para que ambos transforms no se pisen. */
+.night-sky {
   transform: translate3d(var(--parallax-x, 0px), var(--parallax-y, 0px), 0);
   will-change: transform;
+}
+
+/* Las capas del día se desplazan en proporción a --depth: las cercanas más y
+   las lejanas menos, que es lo que se lee como profundidad. Se usa la
+   propiedad `translate` y no `transform` para no pisar las animaciones propias
+   de cada capa. */
+.parallax-layer {
+  translate: calc(var(--parallax-x, 0px) * var(--depth, 1))
+    calc(var(--parallax-y, 0px) * var(--depth, 1));
 }
 
 /* Al girar, un elemento del tamaño del viewport dejaría las esquinas vacías.
@@ -330,18 +340,319 @@ body {
   }
 }
 
-/* Quien pide menos movimiento no debería perderse el guiño: se detiene todo y
-   el Tux se queda visible de forma permanente. Las estrellas fugaces, que sólo
-   existen en movimiento, se retiran. */
+/* ---------------------------------------------------------------------------
+   Cielo diurno animado
+   --------------------------------------------------------------------------- */
+
+.sun {
+  position: absolute;
+  top: 12%;
+  right: 12%;
+  width: 140px;
+  height: 140px;
+}
+
+.sun-disc,
+.sun-halo,
+.sun-rays {
+  position: absolute;
+  border-radius: 50%;
+}
+
+/* Los anillos fijos del disco son el halo de siempre; los dos .sun-halo se
+   expanden por encima y se desvanecen, desfasados medio ciclo, como si el sol
+   respirara. */
+.sun-disc {
+  inset: 0;
+  background: #fff3e0;
+  box-shadow:
+    0 0 0 40px rgba(255, 243, 224, 0.2),
+    0 0 0 80px rgba(255, 243, 224, 0.1);
+}
+
+.sun-halo {
+  inset: 0;
+  background: rgba(255, 243, 224, 0.45);
+  opacity: 0;
+}
+
+/* Rayos finos de un degradado cónico que se desvanecen hacia fuera. */
+.sun-rays {
+  inset: -100px;
+  background: repeating-conic-gradient(
+    rgba(255, 250, 240, 0.55) 0deg 3deg,
+    transparent 3deg 18deg
+  );
+  mask-image: radial-gradient(closest-side, #000 40%, transparent);
+}
+
+.cloud {
+  position: absolute;
+  left: var(--cloud-left, 0px);
+  height: auto;
+}
+
+.bird-flock {
+  position: absolute;
+  opacity: 0;
+}
+
+.bird {
+  position: absolute;
+  height: auto;
+  overflow: visible;
+  opacity: 0.55;
+}
+
+/* Cada ala gira alrededor del cuerpo del ave (12, 7 en su viewBox). */
+.bird-wing {
+  fill: none;
+  stroke: #592d1f;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  transform-box: view-box;
+  transform-origin: 12px 7px;
+}
+
+.paper-kite {
+  --kite-w: clamp(80px, 7vw, 120px);
+  position: absolute;
+  top: 34%;
+  right: 22%;
+  bottom: -40px;
+  width: var(--kite-w);
+}
+
+/* El hilo arranca en el punto de atado (el cruce de las varillas) y baja en
+   curva hacia la izquierda hasta perderse tras la duna cercana. La altura va
+   explícita: un <svg> es un elemento reemplazado y con `top` + `bottom` no se
+   estira, sino que conserva su proporción y el hilo acabaría en el aire. */
+.kite-string {
+  position: absolute;
+  top: calc(var(--kite-w) * 0.46);
+  right: 50%;
+  width: calc(var(--kite-w) * 3);
+  height: calc(100% - var(--kite-w) * 0.46);
+  overflow: visible;
+}
+
+.kite-string path {
+  stroke: #592d1f;
+  stroke-opacity: 0.4;
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+/* El giro se hace alrededor del punto de atado (50, 46 en el viewBox de
+   100×260), así el hilo nunca se despega de la cometa. */
+.kite-body {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  transform-origin: 50% 17.7%;
+}
+
+.kite-frame,
+.kite-tail-line {
+  stroke: #592d1f;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+
+.kite-tail-line {
+  stroke-width: 1;
+}
+
+.kite-tail {
+  transform-box: view-box;
+  transform-origin: 50px 128px;
+}
+
+.kite-bow {
+  fill: #c25a24;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+/* Más anchas que la pantalla y desbordando por abajo, para que el parallax
+   nunca deje ver sus bordes. */
+.dune {
+  position: absolute;
+  left: -40px;
+  bottom: -32px;
+  width: calc(100% + 80px);
+  height: auto;
+}
+
+/* Como en la noche, las animaciones del día sólo corren en su modo. */
+:root:not(.dark) .sun-rays {
+  animation: sky-rotate 120s linear infinite;
+}
+
+:root:not(.dark) .sun-halo {
+  animation: sun-pulse 8s ease-out infinite;
+}
+
+:root:not(.dark) .sun-halo + .sun-halo {
+  animation-delay: -4s;
+}
+
+:root:not(.dark) .cloud {
+  animation: cloud-drift var(--cloud-duration, 120s) linear var(--cloud-delay, 0s) infinite;
+}
+
+:root:not(.dark) .bird-flock {
+  animation: bird-flight var(--flight-duration, 30s) linear var(--flight-delay, 0s) infinite;
+}
+
+:root:not(.dark) .bird-wing--left {
+  animation: wing-left 0.6s ease-in-out var(--flap-delay, 0s) infinite;
+}
+
+:root:not(.dark) .bird-wing--right {
+  animation: wing-right 0.6s ease-in-out var(--flap-delay, 0s) infinite;
+}
+
+:root:not(.dark) .paper-kite {
+  animation: kite-bob 5s ease-in-out infinite;
+}
+
+:root:not(.dark) .kite-body {
+  animation: kite-sway 7s ease-in-out infinite;
+}
+
+:root:not(.dark) .kite-tail {
+  animation: kite-tail 2.4s ease-in-out infinite;
+}
+
+:root:not(.dark) .kite-bow {
+  animation: kite-bow 1.2s ease-in-out var(--bow-delay, 0s) infinite;
+}
+
+@keyframes sun-pulse {
+  from {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(2.3);
+    opacity: 0;
+  }
+}
+
+/* De justo fuera del borde izquierdo a justo fuera del derecho, sea cual sea
+   la posición en reposo de la nube. */
+@keyframes cloud-drift {
+  from {
+    transform: translateX(calc(-100% - var(--cloud-left, 0px)));
+  }
+  to {
+    transform: translateX(calc(100vw - var(--cloud-left, 0px)));
+  }
+}
+
+/* La bandada cruza en el primer 40 % del ciclo describiendo un arco suave y
+   espera invisible el resto. */
+@keyframes bird-flight {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0);
+  }
+  3%,
+  37% {
+    opacity: 1;
+  }
+  20% {
+    transform: translate(calc(var(--flight-dx) * 0.5), -14px);
+  }
+  40%,
+  100% {
+    opacity: 0;
+    transform: translate(var(--flight-dx), 4px);
+  }
+}
+
+@keyframes wing-left {
+  0%,
+  100% {
+    transform: rotate(22deg);
+  }
+  50% {
+    transform: rotate(-14deg);
+  }
+}
+
+@keyframes wing-right {
+  0%,
+  100% {
+    transform: rotate(-22deg);
+  }
+  50% {
+    transform: rotate(14deg);
+  }
+}
+
+@keyframes kite-bob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes kite-sway {
+  0%,
+  100% {
+    transform: rotate(-6deg);
+  }
+  50% {
+    transform: rotate(6deg);
+  }
+}
+
+@keyframes kite-tail {
+  0%,
+  100% {
+    transform: rotate(5deg);
+  }
+  50% {
+    transform: rotate(-5deg);
+  }
+}
+
+@keyframes kite-bow {
+  0%,
+  100% {
+    transform: rotate(-18deg);
+  }
+  50% {
+    transform: rotate(18deg);
+  }
+}
+
+/* Quien pide menos movimiento no debería perderse los guiños: se detiene todo
+   y tanto el Tux como la cometa se quedan visibles de forma permanente. Las
+   estrellas fugaces y las aves, que sólo existen en movimiento, se retiran. */
 @media (prefers-reduced-motion: reduce) {
-  .shooting-star {
+  .shooting-star,
+  .bird-flock {
     display: none;
   }
 
   .sky-rotor,
   .star-layer,
   .tux-line,
-  .tux-stars {
+  .tux-stars,
+  .sun-rays,
+  .sun-halo,
+  .cloud,
+  .paper-kite,
+  .kite-body,
+  .kite-tail,
+  .kite-bow {
     animation: none !important;
   }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useRef, ReactNode } from "react";
-import { useTheme } from "@/components/ThemeProvider";
 
 // Desplazamiento máximo, en píxeles, cuando el cursor está en un borde.
 const MAX_SHIFT = 16;
@@ -10,8 +9,13 @@ const MAX_SHIFT = 16;
 const EASING = 0.06;
 
 /**
- * Desplaza muy levemente el cielo nocturno según la posición del cursor, para
- * dar sensación de profundidad.
+ * Sigue la posición del cursor y la publica como las variables CSS
+ * `--parallax-x` / `--parallax-y`, para dar sensación de profundidad al cielo.
+ *
+ * El componente no mueve nada por sí mismo: cada capa decide cuánto se
+ * desplaza a partir de esas variables (el cielo nocturno entero en bloque, las
+ * dunas y nubes del día según su profundidad), así que un único listener sirve
+ * para los dos cielos.
  *
  * Recibe el cielo como `children` para que todo ese marcado (varios SVG) se
  * siga renderizando en el servidor: lo único que viaja al navegador es la
@@ -21,11 +25,10 @@ const EASING = 0.06;
  */
 export function SkyParallax({ children }: { children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const { theme } = useTheme();
 
   useEffect(() => {
     const node = ref.current;
-    if (!node || theme !== "dark") return;
+    if (!node) return;
 
     // Sin movimiento si el visitante lo ha pedido, y sin escuchar el ratón en
     // dispositivos que no tienen puntero fino (móviles y tablets).
@@ -65,10 +68,10 @@ export function SkyParallax({ children }: { children: ReactNode }) {
       node.style.removeProperty("--parallax-x");
       node.style.removeProperty("--parallax-y");
     };
-  }, [theme]);
+  }, []);
 
   return (
-    <div ref={ref} className="sky-parallax absolute inset-0">
+    <div ref={ref} className="absolute inset-0">
       {children}
     </div>
   );
