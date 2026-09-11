@@ -1,7 +1,12 @@
+import { ShootingStars } from "@/components/ShootingStars";
+import { SkyConstellations } from "@/components/SkyConstellations";
+import { SkyParallax } from "@/components/SkyParallax";
+import { TuxConstellation } from "@/components/TuxConstellation";
+
 export function SkyBackground() {
   return (
     <div
-      className="fixed inset-0 -z-10 overflow-hidden bg-day-bg dark:bg-night-bg transition-colors duration-700"
+      className="fixed inset-0 -z-10 overflow-hidden pointer-events-none bg-day-bg dark:bg-night-bg transition-colors duration-700"
       aria-hidden="true"
     >
       {/* Cielo día: sol, nubes, dunas */}
@@ -34,66 +39,39 @@ export function SkyBackground() {
         </svg>
       </div>
 
-      {/* Cielo noche: estrellas, constelación, luna */}
+      {/* Cielo noche: estrellas, constelaciones, estrellas fugaces, luna */}
       <div className="absolute inset-0 opacity-0 dark:opacity-100 transition-opacity duration-700">
-        <div className="stars absolute inset-0" />
-        <svg
-          className="absolute"
-          style={{ top: "15%", right: "20%", width: 180, height: 180 }}
-          viewBox="0 0 200 200"
-          fill="none"
-        >
-          <path
-            d="M100 40 L100 100 L50 160 M100 100 L150 140"
-            stroke="rgba(255,255,255,0.25)"
-            strokeWidth={1.5}
-            strokeDasharray="3 3"
+        <SkyParallax>
+          {/* La bóveda gira despacio en bloque, así que las estrellas y las
+              constelaciones se mueven solidariamente, como el cielo real. */}
+          <div className="sky-rotor">
+            <div className="star-layer star-layer--far" />
+            <div className="star-layer star-layer--mid" />
+            <div className="star-layer star-layer--near" />
+
+            <SkyConstellations />
+          </div>
+
+          {/* El Tux también queda fuera del rotor: orbitando el centro pasaría
+              buena parte del ciclo detrás del texto de la portada. Fijo en el
+              hueco libre de la derecha, bajo la luna, siempre está a la vista. */}
+          <TuxConstellation />
+          <ShootingStars />
+
+          {/* La luna queda fuera del rotor: orbitando el centro de la pantalla
+              se vería antinatural. */}
+          <div
+            className="absolute rounded-full"
+            style={{
+              top: "20%",
+              right: "10%",
+              width: 100,
+              height: 100,
+              boxShadow: "-22px 13px 0 0 #F3F4F6",
+              transform: "rotate(-20deg)",
+            }}
           />
-          <circle cx={100} cy={40} r={3} fill="white" />
-          <circle cx={100} cy={100} r={2.5} fill="white" />
-          <circle cx={50} cy={160} r={3.5} fill="white" />
-          <circle cx={150} cy={140} r={2} fill="white" />
-        </svg>
-        <div
-          className="absolute rounded-full"
-          style={{
-            top: "20%",
-            right: "10%",
-            width: 100,
-            height: 100,
-            boxShadow: "-22px 13px 0 0 #F3F4F6",
-            transform: "rotate(-20deg)",
-          }}
-        />
-        {/* Easter egg: Tux (pingüino de Linux) dibujado como constelación muy sutil */}
-        <svg
-          className="absolute opacity-30"
-          style={{
-            top: "45%",
-            left: "10%",
-            width: 180,
-            height: 180,
-            transform: "scale(0.6) rotate(-15deg)",
-          }}
-          viewBox="0 0 200 200"
-          fill="none"
-        >
-          <path
-            d="M100 20 L70 50 L30 110 L60 180 L100 170 L140 180 L170 110 L130 50 Z M70 50 L100 80 L130 50"
-            stroke="rgba(255,255,255,0.15)"
-            strokeWidth={1}
-            strokeDasharray="2 4"
-          />
-          <circle cx={100} cy={20} r={2} fill="white" />
-          <circle cx={70} cy={50} r={1.5} fill="white" />
-          <circle cx={130} cy={50} r={1.5} fill="white" />
-          <circle cx={30} cy={110} r={2} fill="white" />
-          <circle cx={170} cy={110} r={2} fill="white" />
-          <circle cx={60} cy={180} r={2} fill="white" />
-          <circle cx={140} cy={180} r={2} fill="white" />
-          <circle cx={100} cy={170} r={1.5} fill="white" />
-          <circle cx={100} cy={80} r={1.5} fill="white" />
-        </svg>
+        </SkyParallax>
       </div>
     </div>
   );

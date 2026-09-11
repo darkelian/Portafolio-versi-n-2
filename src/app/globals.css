@@ -77,12 +77,280 @@ body {
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Estrellas del fondo nocturno */
-.stars {
+/* ---------------------------------------------------------------------------
+   Cielo nocturno animado
+   --------------------------------------------------------------------------- */
+
+/* El parallax del ratón (SkyParallax) sólo escribe estas dos variables; la
+   rotación vive en el hijo .sky-rotor para que ambos transforms no se pisen. */
+.sky-parallax {
+  transform: translate3d(var(--parallax-x, 0px), var(--parallax-y, 0px), 0);
+  will-change: transform;
+}
+
+/* Al girar, un elemento del tamaño del viewport dejaría las esquinas vacías.
+   El rotor es un cuadrado centrado de lado 200vmax, mayor que la diagonal de
+   cualquier pantalla, así que cubre siempre el encuadre en cualquier ángulo. */
+.sky-rotor {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 200vmax;
+  height: 200vmax;
+  margin: -100vmax 0 0 -100vmax;
+}
+
+.star-layer {
+  position: absolute;
+  inset: 0;
+  background-repeat: repeat;
+}
+
+/* Un solo radial-gradient repetido dibuja una rejilla perfectamente regular que
+   se nota a la primera. En su lugar, cada capa es un mosaico grande con las
+   estrellas repartidas de forma irregular dentro de él, y los tres mosaicos
+   tienen lados distintos y sin múltiplos comunes, así que la repetición no
+   llega a coincidir nunca en pantalla. */
+.star-layer--far {
   background-image:
-    radial-gradient(white, rgba(255, 255, 255, 0.2) 1px, transparent 1px),
-    radial-gradient(white, rgba(255, 255, 255, 0.15) 1px, transparent 1px);
-  background-size: 80px 80px, 150px 150px;
-  background-position: 0 0, 40px 60px;
-  opacity: 0.5;
+    radial-gradient(1px 1px at 37px 51px, #fff, transparent),
+    radial-gradient(1px 1px at 194px 23px, #fff, transparent),
+    radial-gradient(1px 1px at 271px 137px, #fff, transparent),
+    radial-gradient(1px 1px at 88px 199px, #fff, transparent),
+    radial-gradient(1px 1px at 331px 291px, #fff, transparent),
+    radial-gradient(1px 1px at 153px 312px, #fff, transparent),
+    radial-gradient(1px 1px at 249px 71px, #fff, transparent),
+    radial-gradient(1px 1px at 19px 268px, #fff, transparent);
+  background-size: 367px 367px;
+  opacity: 0.32;
+}
+
+.star-layer--mid {
+  background-image:
+    radial-gradient(1.2px 1.2px at 63px 29px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 211px 96px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 122px 173px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 268px 241px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 41px 217px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 179px 12px, #fff, transparent),
+    radial-gradient(1.2px 1.2px at 287px 148px, #fff, transparent);
+  background-size: 293px 293px;
+  opacity: 0.45;
+}
+
+.star-layer--near {
+  background-image:
+    radial-gradient(1.6px 1.6px at 91px 47px, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 27px 158px, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 176px 113px, #fff, transparent),
+    radial-gradient(1.6px 1.6px at 133px 196px, #fff, transparent),
+    radial-gradient(1.4px 1.4px at 203px 31px, #fff, transparent);
+  background-size: 227px 227px;
+  opacity: 0.55;
+}
+
+.sky-constellation {
+  position: absolute;
+  height: auto;
+}
+
+.sky-constellation--abstract {
+  top: calc(50% - 26vmax);
+  left: calc(50% + 14vmax);
+  width: clamp(140px, 14vw, 200px);
+}
+
+.sky-constellation--dipper {
+  top: calc(50% + 6vmax);
+  left: calc(50% - 44vmax);
+  width: clamp(160px, 16vw, 240px);
+}
+
+.sky-constellation--cassiopeia {
+  top: calc(50% - 24vmax);
+  left: calc(50% - 12vmax);
+  width: clamp(130px, 12vw, 180px);
+}
+
+/* Fuera del rotor, así que se posiciona respecto a la pantalla: en la columna
+   derecha, que la portada deja libre, justo por debajo de la luna. */
+.tux-constellation {
+  position: absolute;
+  top: 36%;
+  right: 12%;
+  width: clamp(150px, 15vw, 230px);
+  height: auto;
+}
+
+.tux-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 0.8;
+  stroke-linejoin: round;
+  /* pathLength={1} en el SVG normaliza cada trazo, así que el dibujado va
+     simplemente de un offset de 1 a 0. */
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  opacity: 0;
+}
+
+.tux-stars {
+  fill: currentColor;
+  opacity: 0.28;
+}
+
+.tux-part--cool {
+  color: #dbe4ff;
+}
+
+.tux-part--amber {
+  color: #e9a75f;
+}
+
+/* La estela es una línea con degradado cuya cabeza (el ::after) está en el
+   extremo derecho; el giro alrededor del extremo izquierdo fija la dirección
+   de caída y el translateX de la animación la desplaza a lo largo de ella. */
+.shooting-star {
+  position: absolute;
+  width: 140px;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85));
+  transform-origin: 0 50%;
+  opacity: 0;
+}
+
+.shooting-star::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 0;
+  width: 3px;
+  height: 3px;
+  margin-top: -1.5px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.6);
+}
+
+/* Las animaciones sólo corren en modo noche: en modo día este bloque sigue en
+   el DOM (a opacidad 0) y estaría gastando ciclos para nada. */
+:where(.dark) .sky-rotor {
+  animation: sky-rotate 300s linear infinite;
+}
+
+:where(.dark) .star-layer--far {
+  animation: star-breathe 14s ease-in-out infinite;
+}
+
+:where(.dark) .star-layer--mid {
+  animation: star-breathe 9s ease-in-out -3s infinite;
+}
+
+:where(.dark) .star-layer--near {
+  animation: star-breathe 11s ease-in-out -6s infinite;
+}
+
+:where(.dark) .tux-line {
+  animation: tux-trace 25s ease-in-out var(--tux-delay, 0s) infinite;
+}
+
+:where(.dark) .tux-stars {
+  animation: tux-glow 25s ease-in-out var(--tux-delay, 0s) infinite;
+}
+
+:where(.dark) .shooting-star {
+  animation: shooting-star var(--meteor-duration, 15s) ease-out var(--meteor-delay, 0s) infinite;
+}
+
+@keyframes sky-rotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes star-breathe {
+  0%,
+  100% {
+    opacity: 0.28;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Reposo → el trazo se dibuja → se mantiene → se desvanece. */
+@keyframes tux-trace {
+  0%,
+  6% {
+    stroke-dashoffset: 1;
+    opacity: 0;
+  }
+  22%,
+  58% {
+    stroke-dashoffset: 0;
+    opacity: 0.75;
+  }
+  72%,
+  100% {
+    stroke-dashoffset: 0;
+    opacity: 0;
+  }
+}
+
+@keyframes tux-glow {
+  0%,
+  6% {
+    opacity: 0.28;
+  }
+  22%,
+  58% {
+    opacity: 0.95;
+  }
+  72%,
+  100% {
+    opacity: 0.28;
+  }
+}
+
+/* La estela cruza en el primer 5 % del ciclo y el resto del tiempo espera
+   invisible, que es lo que espacia una estrella fugaz de la siguiente. */
+@keyframes shooting-star {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--meteor-angle, 30deg)) translateX(0) scaleX(0.3);
+  }
+  1% {
+    opacity: 1;
+  }
+  5%,
+  100% {
+    opacity: 0;
+    transform: rotate(var(--meteor-angle, 30deg)) translateX(320px) scaleX(1);
+  }
+}
+
+/* Quien pide menos movimiento no debería perderse el guiño: se detiene todo y
+   el Tux se queda visible de forma permanente. Las estrellas fugaces, que sólo
+   existen en movimiento, se retiran. */
+@media (prefers-reduced-motion: reduce) {
+  .shooting-star {
+    display: none;
+  }
+
+  .sky-rotor,
+  .star-layer,
+  .tux-line,
+  .tux-stars {
+    animation: none !important;
+  }
+
+  .tux-line {
+    stroke-dashoffset: 0;
+    opacity: 0.4;
+  }
+
+  .tux-stars {
+    opacity: 0.55;
+  }
 }
